@@ -32,7 +32,6 @@ def run(params: ActionParams) -> None:
             widget_id,
             list_name
         )
-        memory.create_todo_list(widget_id, list_name)
     else:
         widget_id = memory.get_todo_list_by_name(list_name)['widget_id']
 
@@ -41,10 +40,27 @@ def run(params: ActionParams) -> None:
         memory.create_todo_item(widget_id, list_name, todo)
         result += str(leon.set_answer_data('list_todo_element', {'todo': todo}))
 
+    # Fetch the updated list of todos after adding new items
+    updated_todos = memory.get_todo_items(widget_id, list_name)
+    
+    # Create the widget with the updated todos list
+    todos_list_widget = TodosListWidget(
+        WidgetOptions(
+            wrapper_props={'noPadding': True},
+            params={'list_name': list_name, 'todos': updated_todos},
+            on_fetch={
+                'widget_id': widget_id,
+                'action_name': 'view_list'
+            }
+        )
+    )
+
+    # Include the widget in the response
     leon.answer({
         'key': 'todos_added',
         'data': {
             'list': list_name,
             'result': result
-        }
+        },
+        'widget': todos_list_widget
     })
